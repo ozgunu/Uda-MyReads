@@ -20,41 +20,55 @@ class BooksApp extends Component {
 
   // Handle shelf change for a book
   handleShelfChange = (book, shelf) => {
-    BooksAPI.update(book, shelf).then((updatedBook) => {    
-      this.loadBooks();
-    });  
+   
+    // Update server
+    BooksAPI.update(book, shelf).then(() => {
+
+      let allBooks = [];
+
+      // Now change the shelf of this book inside 
+      // our local books and update the state
+      this.state.allBooks.forEach(currentBook => {
+        if (currentBook.id === book.id)
+          currentBook.shelf = shelf;
+        allBooks.push(currentBook);
+      });
+
+      this.separateBooks(allBooks);
+      
+    });
+
   }
 
   componentDidMount() {
-    this.loadBooks();
+    BooksAPI.getAll().then(books => {
+      this.separateBooks(books);
+    });
   }
 
-  // Get all books from server 
-  // and group them by shelves
-  loadBooks() {
+  // Group books by shelves and set state
+  separateBooks(books) {
+    let currentlyReading = books.filter(book => book.shelf === 'currentlyReading');
+    let wantToRead = books.filter(book => book.shelf === 'wantToRead');
+    let read = books.filter(book => book.shelf === 'read');
 
-    BooksAPI.getAll().then(books => {
-
-      let currentlyReading = books.filter(book => book.shelf === 'currentlyReading');
-      let wantToRead = books.filter(book => book.shelf === 'wantToRead');
-      let read = books.filter(book => book.shelf === 'read');
-
-      this.setState({
-        allBooks: books,
-        currentlyReading: currentlyReading,
-        wantToRead: wantToRead,
-        read: read
-      });
-
+    this.setState({
+      allBooks: books,
+      currentlyReading: currentlyReading,
+      wantToRead: wantToRead,
+      read: read
     });
-
   }
 
   // Update state's query on each key stroke
   // This will re-render the component.
   updateSearchQuery(query) {
-    this.setState({ searchQuery: query.trim() });
-    this.searchBooks();
+    this.setState({ searchQuery: query.trim() });   
+    
+    if (!query)
+      this.setState({ searchResults: [] });
+    else
+      this.searchBooks();
   }
 
   // Search books. After fetching the results look at our shelves and see
@@ -62,13 +76,13 @@ class BooksApp extends Component {
   // use 'none' as shelf. Then set the searchResults in the state object.
   searchBooks() {
 
-    if (!this.state.searchQuery) {
-      return;
-    }
-
     // Search the server
     BooksAPI.search(this.state.searchQuery).then(searchResults => {
-      
+
+      if (!searchResults || (searchResults && searchResults.error)) {
+        return;
+      }
+
       // We will collect fixed search results here
       var fixedSearchResults = [];
 

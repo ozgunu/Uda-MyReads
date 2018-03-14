@@ -12,6 +12,8 @@ class Book extends Component {
             imageLinks: this.props.details.imageLinks,
             shelf: this.props.details.shelf
         }
+
+        
     }
 
     handleShelfChange = (event) => {     
@@ -21,10 +23,15 @@ class Book extends Component {
     }
 
     render() {
+        
+        // Fetch the image thumbnail from state.imageLinks, if does not exist use placeholder
+        const imageThumbnail = this.state.imageLinks ? this.state.imageLinks.thumbnail : "http://via.placeholder.com/128x190";
+        const authors = this.state.authors ? this.state.authors : [];
+
         return (
             <div className="book">
                 <div className="book-top">
-                    <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: "url(" + this.state.imageLinks.thumbnail + ")" }}></div>
+                    <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: "url(" + imageThumbnail + ")" }}></div>
                     <div className="book-shelf-changer">
                         <select value={this.state.shelf} onChange={this.handleShelfChange}>
                             <option value="none" disabled>Move to...</option>
@@ -36,7 +43,7 @@ class Book extends Component {
             </div>
                 </div>
                 <div className="book-title">{this.state.title}</div>
-                <div className="book-authors">{this.state.authors.join(", ")}</div>
+                <div className="book-authors">{authors.join(", ")}</div>
             </div>
         )
     }

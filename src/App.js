@@ -3,6 +3,7 @@ import { Route, Link } from 'react-router-dom'
 import Book from './Book'
 import * as BooksAPI from './BooksAPI'
 import './App.css'
+import { __esModule } from 'react-router-dom/MemoryRouter';
 
 class BooksApp extends Component {
 
@@ -24,15 +25,23 @@ class BooksApp extends Component {
     // Update server
     BooksAPI.update(book, shelf).then(() => {
 
-      let allBooks = [];
+      var allBooks = [];
 
-      // Now change the shelf of this book inside 
-      // our local books and update the state
-      this.state.allBooks.forEach(currentBook => {
-        if (currentBook.id === book.id)
-          currentBook.shelf = shelf;
-        allBooks.push(currentBook);
-      });
+      // Add this book among our books
+      if (book.shelf === 'none') {
+        book.shelf = shelf;
+        allBooks = this.state.allBooks.slice();
+        allBooks.push(book);
+      
+      // Book was already on a shelf
+      } else {
+        allBooks = this.state.allBooks.map(currentBook => {
+          if (currentBook.id === book.id) {
+            currentBook.shelf = shelf;
+          }
+          return currentBook;
+        });
+      }
 
       this.separateBooks(allBooks);
       
@@ -41,8 +50,8 @@ class BooksApp extends Component {
   }
 
   componentDidMount() {
-    BooksAPI.getAll().then(books => {
-      this.separateBooks(books);
+    BooksAPI.getAll().then(fetchedBooks => {
+      this.separateBooks(fetchedBooks);
     });
   }
 
@@ -97,7 +106,7 @@ class BooksApp extends Component {
           if (searchResult.id === myBook.id) {
             searchResult.shelf = myBook.shelf;
           }
-        });
+        })
 
         // Add the result to the array
         fixedSearchResults.push(searchResult);
